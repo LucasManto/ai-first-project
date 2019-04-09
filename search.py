@@ -18,5 +18,25 @@ def read_board(filepath='board.txt'):
     return np.array(board)
 
 
+def find_path(start_index, target_index, board, algorithm='dfs'):
+    assert algorithm in ['dfs', 'bfs', 'bstf', 'a*'], "The algorithm parameter should be dfs, bfs, bstf or a*"
+
+    if algorithm is 'dfs':
+        pass
+    elif algorithm is 'bfs':
+        pass
+    elif algorithm is 'bstf':
+        pass
+    else:
+        pass
+
+    path = []
+    return path
+
+
 if __name__ == "__main__":
     board = read_board('board.txt')
+    start_index = np.argwhere(board == '#')
+    target_index = np.argwhere(board == '$')
+    path = find_path(start_index, target_index, board)
+    print(path)
