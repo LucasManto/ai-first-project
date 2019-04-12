@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 
 def read_board(filepath='board.txt'):
@@ -17,24 +18,61 @@ def read_board(filepath='board.txt'):
     return np.array(board), n_rows, n_cols
 
 
-def search_children(node, board, n_rows, n_cols):
-    return []
+def define_limits(index, max):
+    inf_limit = index - 1
+    sup_limit = index + 2
+    if inf_limit < 0:
+        inf_limit = 0
+    if sup_limit > max:
+        sup_limit = max
+
+    return inf_limit, sup_limit
 
 
-def insert_dfs(children, nodes):
-    pass
+def search_children(nodes, board, n_rows, n_cols):
+    row_index = nodes[0][0][0]
+    col_index = nodes[0][0][1]
+
+    # Defining limits to possible ways in rows and colums
+    row_inf_limit, row_sup_limit = define_limits(row_index, n_rows)
+    col_inf_limit, col_sup_limit = define_limits(col_index, n_cols)
+
+    # Creating ranges
+    row_range = range(row_inf_limit, row_sup_limit)
+    col_range = range(col_inf_limit, col_sup_limit)
+
+    # Adding children indexes to list only if the children is not '_' and indexes are different from actual index
+    children = [[[i, j]] for i in row_range for j in col_range if (board[i][j] != '_' and (i != row_index or j != col_index) and [i, j] not in nodes[0])]
+    for c in children:
+        c.extend(nodes[0])
+
+    return children
 
 
-def insert_bfs(children, nodes):
-    pass
+def insert_dfs(children, nodes, target_index):
+    nodes.remove(nodes[0])
+    children.extend(nodes)
+    return children
 
 
-def insert_bstf(children, nodes):
-    pass
+def insert_bfs(children, nodes, target_index):
+    nodes.remove(nodes[0])
+    nodes.extend(children)
+    return nodes
 
 
-def insert_a(children, nodes):
-    pass
+def insert_bstf(children, nodes, target_index):
+    nodes.remove(nodes[0])
+    nodes.extend(children)
+    nodes = sorted(nodes, key=lambda x: sum([abs(x[0][0]-x[1][0]), abs(x[0][1]-x[1][1])]), reverse=True)
+    return nodes
+
+
+def insert_a(children, nodes, target_index):
+    nodes.remove(nodes[0])
+    nodes.extend(children)
+    nodes = sorted(nodes, key=lambda x: sum([abs(x[0][0]-x[1][0]), abs(x[0][1]-x[1][1])]) - sum([abs(x[0][0]-target_index[0]), abs(x[0][1]-target_index[1])]), reverse=True)
+    return nodes
 
 
 def find_path(start_index, target_index, board, n_rows, n_cols, algorithm='dfs'):
@@ -48,15 +86,18 @@ def find_path(start_index, target_index, board, n_rows, n_cols, algorithm='dfs')
         insert = insert_bstf
     else:
         insert = insert_a
-
-    # TODO: Implementation of searching and adding possible paths to list
+        
     nodes = [[start_index]]
-    # while nodes[0] != target_index or nodes != []:
-    #     children = search_children(nodes[0], board, n_rows, n_cols)
-    #     insert(children, nodes)
+    while nodes != [] and nodes[0][0] != target_index:
+        children = search_children(nodes, board, n_rows, n_cols)
+        nodes = insert(children, nodes, target_index)
 
-    # path = nodes[0]
-    # path.reverse()
+    if nodes != []:
+        path = nodes[0]
+        path.reverse()
+    else:
+        path = []
+
     return path
 
 
