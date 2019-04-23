@@ -1,4 +1,4 @@
-# Projeto 1 da disciplina de IA
+# AI First Project
 
-## Objetivo
-    Desenvolver um programa capaz de escolher um caminho entre dois pontos, utilizando diversos tipos de algoritmos.
+## Objective
+    Develop a software able to choose a path between two points with breadth-first, depth-first, best-first and A* algorithms
