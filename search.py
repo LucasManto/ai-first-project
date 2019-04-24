@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import time
 
 
 def read_board(filepath='board.txt'):
@@ -29,6 +30,13 @@ def define_limits(index, max):
     return inf_limit, sup_limit
 
 
+def element(element, nodes):
+    for n in nodes:
+        if element in n:
+            return True
+    return False
+
+
 def search_children(nodes, board, n_rows, n_cols):
     row_index = nodes[0][0][0]
     col_index = nodes[0][0][1]
@@ -42,7 +50,7 @@ def search_children(nodes, board, n_rows, n_cols):
     col_range = range(col_inf_limit, col_sup_limit)
 
     # Adding children indexes to list only if the children is not '_' and indexes are different from actual index
-    children = [[[i, j]] for i in row_range for j in col_range if (board[i][j] != '_' and (i != row_index or j != col_index) and [i, j] not in nodes[0])]
+    children = [[[i, j]] for i in row_range for j in col_range if (board[i][j] != '_' and (i != row_index or j != col_index) and not element([i, j], nodes))]
     for c in children:
         c.extend(nodes[0])
 
@@ -50,28 +58,41 @@ def search_children(nodes, board, n_rows, n_cols):
 
 
 def insert_dfs(children, nodes, target_index):
-    nodes.remove(nodes[0])
+    nodes.pop(0)
     children.extend(nodes)
     return children
 
 
 def insert_bfs(children, nodes, target_index):
-    nodes.remove(nodes[0])
+    nodes.pop(0)
     nodes.extend(children)
     return nodes
 
 
 def insert_bstf(children, nodes, target_index):
-    nodes.remove(nodes[0])
+    nodes.pop(0)
     nodes.extend(children)
-    nodes = sorted(nodes, key=lambda x: sum([abs(x[0][0]-x[1][0]), abs(x[0][1]-x[1][1])]), reverse=True)
+    # Sort nodes by euclidean distance between candidate node and father node,
+    # prioritizing diagonal child
+    nodes = sorted(nodes, key=lambda x: math.sqrt((abs(x[0][0]-x[1][0]) + abs(x[0][1]-x[1][1]))), reverse=True)
     return nodes
 
 
+def distance_to_initial(path):
+    distance = 0
+    prev_node = path[0]
+    for curr_node in path[1:]:
+        distance += math.sqrt((abs(curr_node[0]-prev_node[0]) + abs(curr_node[1]-prev_node[1])))
+        prev_node = curr_node
+    return distance
+
+
 def insert_a(children, nodes, target_index):
-    nodes.remove(nodes[0])
+    nodes.pop(0)
     nodes.extend(children)
-    nodes = sorted(nodes, key=lambda x: sum([abs(x[0][0]-x[1][0]), abs(x[0][1]-x[1][1])]) - sum([abs(x[0][0]-target_index[0]), abs(x[0][1]-target_index[1])]), reverse=True)
+    # Sort nodes by euclidean distance between candidate node and father node,
+    # prioritizing diagonal child and shorter distance to target
+    nodes = sorted(nodes, key=lambda x: distance_to_initial(x) + (abs(x[0][0]-target_index[0]) + abs(x[0][1]-target_index[1])))
     return nodes
 
 
@@ -86,7 +107,7 @@ def find_path(start_index, target_index, board, n_rows, n_cols, algorithm='dfs')
         insert = insert_bstf
     else:
         insert = insert_a
-        
+
     nodes = [[start_index]]
     while nodes != [] and nodes[0][0] != target_index:
         children = search_children(nodes, board, n_rows, n_cols)
@@ -107,5 +128,31 @@ if __name__ == "__main__":
     target_index = np.argwhere(board == '$')[0].tolist()
     assert start_index is not [], "Start point not found at board"
     assert target_index is not [], "Target point not found at board"
-    path = find_path(start_index, target_index, board, n_rows, n_cols)
-    print(path)
+
+    print('DFS:')
+    start = time.time()
+    path = find_path(start_index, target_index, board, n_rows, n_cols, algorithm='dfs')
+    end = time.time()
+    print('\t- Path: ', path)
+    print('\t- Time: ', round(end-start, 5))
+
+    print('BFS:')
+    start = time.time()
+    path = find_path(start_index, target_index, board, n_rows, n_cols, algorithm='bfs')
+    end = time.time()
+    print('\t- Path: ', path)
+    print('\t- Time: ', round(end-start, 5))
+
+    print('BSTF:')
+    start = time.time()
+    path = find_path(start_index, target_index, board, n_rows, n_cols, algorithm='bstf')
+    end = time.time()
+    print('\t- Path: ', path)
+    print('\t- Time: ', round(end-start, 5))
+
+    print('A*:')
+    start = time.time()
+    path = find_path(start_index, target_index, board, n_rows, n_cols, algorithm='a*')
+    end = time.time()
+    print('\t- Path: ', path)
+    print('\t- Time: ', round(end-start, 5))
